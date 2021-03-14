@@ -52,9 +52,9 @@ Wait for review of your MR
 ## Getting Started 
 `$ docker build -t pd-exporter .`
 
-`$ docker run -e AUTH_TOKEN=your-api-key-here -dp 9798:9798 pd-exporter`
+`$ docker run -e AUTH_TOKEN=your-api-key-here -dp 9696:9696 pd-exporter`
 
-after a few seconds check: `http://localhost:9798/metrics`
+after a few seconds check: `http://localhost:9696/metrics`
 
 I am currently running this in `ECS`
 
