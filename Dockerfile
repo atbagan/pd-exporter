@@ -15,5 +15,5 @@ FROM scratch
 COPY --from=build /build/app /
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-EXPOSE 9798
+EXPOSE 9696
 ENTRYPOINT [ "/app" ]
