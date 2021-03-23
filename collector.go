@@ -9,10 +9,10 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var authToken = os.Getenv("AUTH_TOKEN")
-
 var client = pagerduty.NewClient(authToken)
 
 func init() {
@@ -37,11 +37,11 @@ func (c *MyCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
-	total, compliance := callPagerdutyApi()
+	total, compliance, serviceIds := callPagerdutyApi()
 	users := callPagerdutyApiUsers()
 	teams := callPagerdutyApiTeams()
 	businessServices := callPagerdutyApiBusinessServices()
-	callPagerDutyApiAnalytics()
+	mapOfMetrics := callPagerDutyApiAnalytics(serviceIds)
 	ch <- prometheus.MustNewConstMetric(
 		c.totalGaugeDesc,
 		prometheus.GaugeValue,
@@ -67,6 +67,28 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.GaugeValue,
 		float64(businessServices),
 	)
+	for k, v := range mapOfMetrics {
+		metric, err := prometheus.NewConstMetric(
+			prometheus.NewDesc("mtta_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"name": k}),
+			prometheus.GaugeValue,
+			float64(v[0]),
+		)
+		if err != nil {
+			panic(err)
+		}
+		ch <- metric
+	}
+	for k, v := range mapOfMetrics {
+		metric, err := prometheus.NewConstMetric(
+			prometheus.NewDesc("mmtr_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"name": k}),
+			prometheus.GaugeValue,
+			float64(v[1]),
+		)
+		if err != nil {
+			panic(err)
+		}
+		ch <- metric
+	}
 }
 func NewMyCollector() *MyCollector {
 	return &MyCollector{
@@ -78,7 +100,7 @@ func NewMyCollector() *MyCollector {
 	}
 }
 
-func callPagerdutyApi() (int, int) {
+func callPagerdutyApi() (int, int, []string) {
 
 	var opts pagerduty.ListServiceOptions
 	var APIList pagerduty.APIListObject
@@ -103,13 +125,15 @@ func callPagerdutyApi() (int, int) {
 
 	totalServices := len(Services)
 	complianceCount := 0
+	serviceNames := make([]string, 0)
 	for k, _ := range Services {
 		re := regexp.MustCompile("_SVC+")
 		if re.MatchString(Services[k].Name) {
+			serviceNames = append(serviceNames, Services[k].ID)
 			complianceCount += 1
 		}
 	}
-	return totalServices, complianceCount
+	return totalServices, complianceCount, serviceNames
 }
 
 func callPagerdutyApiUsers() int {
@@ -184,19 +208,21 @@ func callPagerdutyApiBusinessServices() int {
 	return totalBusinessServices
 }
 
-func callPagerdutyApiIncidents(){
+func callPagerdutyApiIncidents() {
 	var opts pagerduty.ListIncidentsOptions
 	var APIList pagerduty.APIListObject
 	var Incidents []pagerduty.Incident
 	for {
 		eps, err := client.ListIncidents(opts)
-		if err != nil{panic(err)}
+		if err != nil {
+			panic(err)
+		}
 
 		Incidents = append(Incidents, eps.Incidents...)
 		APIList.Offset += 25
 		opts = pagerduty.ListIncidentsOptions{APIListObject: APIList}
 
-		if eps.More != true{
+		if eps.More != true {
 			break
 		}
 	}
@@ -206,7 +232,7 @@ func callPagerdutyApiIncidents(){
 	}
 }
 
-type AnalyticsD struct {
+type AnalyticsData struct {
 	ServiceID                      string `json:"service_id"`
 	ServiceName                    string `json:"service_name"`
 	TeamID                         string `json:"team_id"`
@@ -230,14 +256,14 @@ type AnalyticsD struct {
 	RangeStart                     string `json:"range_start"`
 }
 
-type AnalyticsR struct {
-	Data            []AnalyticsD  `json:"data,omitempty"`
-	AnalyticsFilter *AnalyticsF `json:"filters,omitempty"`
+type AnalyticsResponse struct {
+	Data            []AnalyticsData  `json:"data,omitempty"`
+	AnalyticsFilter *AnalyticsFilter `json:"filters,omitempty"`
 	AggregateUnit   string           `json:"aggregate_unit,omitempty"`
 	TimeZone        string           `json:"time_zone,omitempty"`
 }
 
-type AnalyticsF struct {
+type AnalyticsFilter struct {
 	CreatedAtStart string   `json:"created_at_start,omitempty"`
 	CreatedAtEnd   string   `json:"created_at_end,omitempty"`
 	Urgency        string   `json:"urgency,omitempty"`
@@ -248,26 +274,52 @@ type AnalyticsF struct {
 	PriorityName   []string `json:"priority_name,omitempty"`
 }
 
-func callPagerDutyApiAnalytics(){
+func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 	url := "https://api.pagerduty.com/analytics/metrics/incidents/services"
-	payload := strings.NewReader("{\"aggregate_unit\":\"week\"}")
+	endTime := time.Now().Format(time.RFC3339)
+	startTime := time.Now().AddDate(-1, 0, 0).Format(time.RFC3339)
+	chunks := make([][]string, 0)
+	chunkSize := 10
 
-	var analyticsR AnalyticsR
+	for i := 0; i < len(serviceIds); i += chunkSize {
+		end := i + chunkSize
+		if end > len(serviceIds) {
+			end = len(serviceIds)
+		}
 
-	req, err := http.NewRequest("POST", url, payload)
-	if err != nil {panic(err)}
-
-	req.Header.Add("X-EARLY-ACCESS", "analytics-v2")
-	req.Header.Add("Accept","application/vnd.pagerduty+json;version=2")
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Token token="+authToken)
-
-	resp, _ := http.DefaultClient.Do(req)
-	err  = decodeJSON(resp, &analyticsR)
-	fmt.Println(resp)
-	for _, v := range analyticsR.Data {
-		fmt.Println(v.ServiceName, v.MeanSecondsToFirstAck, v.MeanSecondsToResolve)
+		chunks = append(chunks, serviceIds[i:end])
 	}
+
+	var analyticsResponse AnalyticsResponse
+	arrOfThings := make([]int, 0)
+	mapOfThings := make(map[string][]int, 0)
+
+	for _, chunk := range chunks {
+
+		formatedPayloadString := fmt.Sprintf("{\"filters\":{\"created_at_start\":\"%s\",\"created_at_end\":\"%s\",\"service_ids\":[\"%s\"]}}", startTime, endTime, strings.Join(chunk, "\", \""))
+		payload := strings.NewReader(formatedPayloadString)
+		req, err := http.NewRequest("POST", url, payload)
+		if err != nil {
+			panic(err)
+		}
+
+		req.Header.Add("X-EARLY-ACCESS", "analytics-v2")
+		req.Header.Add("Accept", "application/vnd.pagerduty+json;version=2")
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Authorization", "Token token="+authToken)
+
+		resp, _ := http.DefaultClient.Do(req)
+		err = decodeJSON(resp, &analyticsResponse)
+		tmp := analyticsResponse
+
+		for _, v := range tmp.Data {
+			arrOfThings = nil
+			arrOfThings = append(arrOfThings, v.MeanSecondsToFirstAck, v.MeanSecondsToResolve)
+			mapOfThings[v.ServiceName] = arrOfThings
+		}
+
+	}
+	return mapOfThings
 }
 
 func decodeJSON(resp *http.Response, payload interface{}) error {
