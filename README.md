@@ -12,7 +12,7 @@
   - [Getting Started](#getting-started)
 ------------------------------------------------------------------------------------------------------------------------
 ## Contributing
-
+**NOTE** some metrics are company specific to my org. A table for gathered metrics is in the works.
 ### Developer Workflow
 
 ```
