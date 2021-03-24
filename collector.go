@@ -37,7 +37,7 @@ func (c *MyCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
-	total, compliance, serviceIds := callPagerdutyApi()
+	total, compliance, serviceIds, serviceNames := callPagerdutyApi()
 	users := callPagerdutyApiUsers()
 	teams := callPagerdutyApiTeams()
 	businessServices := callPagerdutyApiBusinessServices()
@@ -67,9 +67,22 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.GaugeValue,
 		float64(businessServices),
 	)
+
+	for k, v := range serviceNames {
+
+		metric, err := prometheus.NewConstMetric(
+			prometheus.NewDesc("servicenames_pagerduty_analytics_metric", fmt.Sprintf("service names "), nil, prometheus.Labels{"allServiceNames": k}),
+			prometheus.GaugeValue,
+			float64(v),
+		)
+		if err != nil {
+			panic(err)
+		}
+		ch <- metric
+	}
 	for k, v := range mapOfMetrics {
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("mtta_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"name": k}),
+			prometheus.NewDesc("mtta_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k}),
 			prometheus.GaugeValue,
 			float64(v[0]),
 		)
@@ -80,7 +93,7 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	for k, v := range mapOfMetrics {
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("mmtr_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"name": k}),
+			prometheus.NewDesc("mttr_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"serviceName": k}),
 			prometheus.GaugeValue,
 			float64(v[1]),
 		)
@@ -100,7 +113,7 @@ func NewMyCollector() *MyCollector {
 	}
 }
 
-func callPagerdutyApi() (int, int, []string) {
+func callPagerdutyApi() (int, int, []string, map[string]int) {
 
 	var opts pagerduty.ListServiceOptions
 	var APIList pagerduty.APIListObject
@@ -125,15 +138,29 @@ func callPagerdutyApi() (int, int, []string) {
 
 	totalServices := len(Services)
 	complianceCount := 0
-	serviceNames := make([]string, 0)
-	for k, _ := range Services {
-		re := regexp.MustCompile("_SVC+")
-		if re.MatchString(Services[k].Name) {
-			serviceNames = append(serviceNames, Services[k].ID)
-			complianceCount += 1
+
+	serviceIds := make([]string, 0)
+	serviceNames := make(map[string]int, 0)
+
+	for k, v := range Services {
+
+		tmp := v.Teams
+
+		if len(tmp) != 0 {
+			re := regexp.MustCompile("_SVC+")
+
+			if re.MatchString(Services[k].Name) {
+				serviceIds = append(serviceIds, Services[k].ID)
+				serviceNames[Services[k].Name] = 1
+				complianceCount += 1
+			} else {
+				serviceNames[Services[k].Name] = 0
+
+			}
 		}
 	}
-	return totalServices, complianceCount, serviceNames
+
+	return totalServices, complianceCount, serviceIds, serviceNames
 }
 
 func callPagerdutyApiUsers() int {
@@ -296,8 +323,8 @@ func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 
 	for _, chunk := range chunks {
 
-		formatedPayloadString := fmt.Sprintf("{\"filters\":{\"created_at_start\":\"%s\",\"created_at_end\":\"%s\",\"service_ids\":[\"%s\"]}}", startTime, endTime, strings.Join(chunk, "\", \""))
-		payload := strings.NewReader(formatedPayloadString)
+		formattedPayloadString := fmt.Sprintf("{\"filters\":{\"created_at_start\":\"%s\",\"created_at_end\":\"%s\",\"service_ids\":[\"%s\"]}}", startTime, endTime, strings.Join(chunk, "\", \""))
+		payload := strings.NewReader(formattedPayloadString)
 		req, err := http.NewRequest("POST", url, payload)
 		if err != nil {
 			panic(err)
