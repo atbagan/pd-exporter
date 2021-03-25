@@ -13,6 +13,8 @@ import (
 )
 
 var authToken = os.Getenv("AUTH_TOKEN")
+
+//var authToken = "2zBBzbY8Qm5B-b8zLCbb"
 var client = pagerduty.NewClient(authToken)
 
 func init() {
@@ -37,11 +39,17 @@ func (c *MyCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
-	total, compliance, serviceIds, serviceInfoSlice := callPagerdutyApi()
+	var pagerdutyServices = pdServices()
+	total := totalServices(pagerdutyServices)
+	compliance := compliantServices(pagerdutyServices)
+	serviceIds := getCompliantServiceIds(pagerdutyServices)
+	serviceInfoSlice := serviceComplianceInfoWithNameAndTeam(pagerdutyServices)
+
 	users := callPagerdutyApiUsers()
 	teams := callPagerdutyApiTeams()
 	businessServices := callPagerdutyApiBusinessServices()
 	mapOfMetrics := callPagerDutyApiAnalytics(serviceIds)
+
 	ch <- prometheus.MustNewConstMetric(
 		c.totalGaugeDesc,
 		prometheus.GaugeValue,
@@ -102,6 +110,7 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- metric
 	}
 }
+
 func NewMyCollector() *MyCollector {
 	return &MyCollector{
 		totalGaugeDesc:            prometheus.NewDesc("pagerduty_total_services_metric", "The number of total services in AIpagerduty", nil, nil),
@@ -118,8 +127,7 @@ type ServiceInfo struct {
 	ServiceTeam string
 }
 
-func callPagerdutyApi() (int, int, []string, []ServiceInfo) {
-
+func pdServices() []pagerduty.Service {
 	var opts pagerduty.ListServiceOptions
 	var APIList pagerduty.APIListObject
 	var Services []pagerduty.Service
@@ -140,44 +148,78 @@ func callPagerdutyApi() (int, int, []string, []ServiceInfo) {
 		}
 
 	}
+	return Services
+}
 
-	totalServices := len(Services)
+func totalServices(pagerdutyServices []pagerduty.Service) int {
+	services := pagerdutyServices
+	return len(services)
+}
+
+func compliantServices(pagerdutyServices []pagerduty.Service) int {
+	services := pagerdutyServices
+
 	complianceCount := 0
+	for k, _ := range services {
 
-	var serviceInfo ServiceInfo
+		re := regexp.MustCompile("_SVC+")
+
+		if re.MatchString(services[k].Name) {
+			complianceCount += 1
+		}
+	}
+	return complianceCount
+}
+
+func getCompliantServiceIds(pagerdutyServices []pagerduty.Service) []string {
+	services := pagerdutyServices
 	serviceIds := make([]string, 0)
+
+	for k, _ := range services {
+
+		re := regexp.MustCompile("_SVC+")
+
+		if re.MatchString(services[k].Name) {
+			serviceIds = append(serviceIds, services[k].ID)
+		}
+	}
+	return serviceIds
+}
+
+func serviceComplianceInfoWithNameAndTeam(pagerdutyServices []pagerduty.Service) []ServiceInfo {
+
+	services := pagerdutyServices
+	var serviceInfo ServiceInfo
 	serviceInfoSlice := make([]ServiceInfo, 0)
 
-	for k, v := range Services {
+	for k, v := range services {
 
 		tmp := v.Teams
 
 		if len(tmp) != 0 {
 			re := regexp.MustCompile("_SVC+")
 
-			if re.MatchString(Services[k].Name) {
-				serviceIds = append(serviceIds, Services[k].ID)
-
+			if re.MatchString(services[k].Name) {
 				serviceInfo = ServiceInfo{
 					Compliant:   1,
-					ServiceName: Services[k].Name,
-					ServiceTeam: Services[k].Teams[0].APIObject.Summary,
+					ServiceName: services[k].Name,
+					ServiceTeam: services[k].Teams[0].APIObject.Summary,
 				}
 
 				serviceInfoSlice = append(serviceInfoSlice, serviceInfo)
-				complianceCount += 1
 			} else {
 				serviceInfo = ServiceInfo{
 					Compliant:   0,
-					ServiceName: Services[k].Name,
-					ServiceTeam: Services[k].Teams[0].APIObject.Summary,
+					ServiceName: services[k].Name,
+					ServiceTeam: services[k].Teams[0].APIObject.Summary,
 				}
+
 				serviceInfoSlice = append(serviceInfoSlice, serviceInfo)
 			}
 		}
 	}
 
-	return totalServices, complianceCount, serviceIds, serviceInfoSlice
+	return serviceInfoSlice
 }
 
 func callPagerdutyApiUsers() int {
