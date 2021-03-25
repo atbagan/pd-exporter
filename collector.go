@@ -70,7 +70,7 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, v := range serviceInfoSlice {
 
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("servicenames_pagerduty_analytics_metric", fmt.Sprintf("service names "), nil, prometheus.Labels{"allServiceNames": v.ServiceName, "allTeamNames": v.ServiceTeam}),
+			prometheus.NewDesc("pagerduty_service_names_metric", fmt.Sprintf("service names "), nil, prometheus.Labels{"allServiceNames": v.ServiceName, "allTeamNames": v.ServiceTeam}),
 			prometheus.GaugeValue,
 			float64(v.Compliant),
 		)
@@ -81,7 +81,7 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	for k, v := range mapOfMetrics {
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("mtta_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k}),
+			prometheus.NewDesc("pagerduty_mtta_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k}),
 			prometheus.GaugeValue,
 			float64(v[0]),
 		)
@@ -92,7 +92,7 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	for k, v := range mapOfMetrics {
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("mttr_pagerduty_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"serviceName": k}),
+			prometheus.NewDesc("pagerduty_mttr_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"compliantServiceName": k}),
 			prometheus.GaugeValue,
 			float64(v[1]),
 		)
@@ -104,11 +104,11 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 }
 func NewMyCollector() *MyCollector {
 	return &MyCollector{
-		totalGaugeDesc:            prometheus.NewDesc("total_pagerduty_services_metric", "The number of total services in AIpagerduty", nil, nil),
-		complianceGaugeDesc:       prometheus.NewDesc("compliancy_pagerduty_services_metric", "Shows the number of compliant services names", nil, nil),
-		usersGaugeDesc:            prometheus.NewDesc("total_pagerduty_users_metric", "Shows the total number of users", nil, nil),
-		teamsGaugeDesc:            prometheus.NewDesc("total_pagerduty_teams_metric", "Shows the total number of teams", nil, nil),
-		businessServicesGaugeDesc: prometheus.NewDesc("total_pagerduty_business_services_metric", "Shows the total number of business services", nil, nil),
+		totalGaugeDesc:            prometheus.NewDesc("pagerduty_total_services_metric", "The number of total services in AIpagerduty", nil, nil),
+		complianceGaugeDesc:       prometheus.NewDesc("pagerduty_total_services_compliant_metric", "Shows the number of compliant services names", nil, nil),
+		usersGaugeDesc:            prometheus.NewDesc("pagerduty_total_users_metric", "Shows the total number of users", nil, nil),
+		teamsGaugeDesc:            prometheus.NewDesc("pagerduty_total_teams_metric", "Shows the total number of teams", nil, nil),
+		businessServicesGaugeDesc: prometheus.NewDesc("pagerduty_total_business_services_metric", "Shows the total number of business services", nil, nil),
 	}
 }
 
@@ -252,29 +252,29 @@ func callPagerdutyApiBusinessServices() int {
 	return totalBusinessServices
 }
 
-func callPagerdutyApiIncidents() {
-	var opts pagerduty.ListIncidentsOptions
-	var APIList pagerduty.APIListObject
-	var Incidents []pagerduty.Incident
-	for {
-		eps, err := client.ListIncidents(opts)
-		if err != nil {
-			panic(err)
-		}
-
-		Incidents = append(Incidents, eps.Incidents...)
-		APIList.Offset += 25
-		opts = pagerduty.ListIncidentsOptions{APIListObject: APIList}
-
-		if eps.More != true {
-			break
-		}
-	}
-
-	for k, _ := range Incidents {
-		fmt.Println(Incidents[k].Service.ID)
-	}
-}
+//func callPagerdutyApiIncidents() {
+//	var opts pagerduty.ListIncidentsOptions
+//	var APIList pagerduty.APIListObject
+//	var Incidents []pagerduty.Incident
+//	for {
+//		eps, err := client.ListIncidents(opts)
+//		if err != nil {
+//			panic(err)
+//		}
+//
+//		Incidents = append(Incidents, eps.Incidents...)
+//		APIList.Offset += 25
+//		opts = pagerduty.ListIncidentsOptions{APIListObject: APIList}
+//
+//		if eps.More != true {
+//			break
+//		}
+//	}
+//
+//	for k := range Incidents {
+//		fmt.Println(Incidents[k].Service.ID)
+//	}
+//}
 
 type AnalyticsData struct {
 	ServiceID                      string `json:"service_id"`
@@ -368,6 +368,7 @@ func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 
 func decodeJSON(resp *http.Response, payload interface{}) error {
 	defer resp.Body.Close()
+
 	decoder := json.NewDecoder(resp.Body)
 	return decoder.Decode(payload)
 }
