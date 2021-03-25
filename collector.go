@@ -12,8 +12,55 @@ import (
 	"time"
 )
 
-var authToken = os.Getenv("AUTH_TOKEN")
+type AnalyticsData struct {
+	ServiceID                      string `json:"service_id"`
+	ServiceName                    string `json:"service_name"`
+	TeamID                         string `json:"team_id"`
+	TeamName                       string `json:"team_name"`
+	MeanSecondsToResolve           int    `json:"mean_seconds_to_resolve"`
+	MeanSecondsToFirstAck          int    `json:"mean_seconds_to_first_ack"`
+	MeanSecondsToEngage            int    `json:"mean_seconds_to_engage"`
+	MeanSecondsToMobilize          int    `json:"mean_seconds_to_mobilize"`
+	MeanEngagedSeconds             int    `json:"mean_engaged_seconds"`
+	MeanEngagedUserCount           int    `json:"mean_engaged_user_count"`
+	TotalEscalationCount           int    `json:"total_escalation_count"`
+	MeanAssignmentCount            int    `json:"mean_assignment_count"`
+	TotalBusinessHourInterruptions int    `json:"total_business_hour_interruptions"`
+	TotalSleepHourInterruptions    int    `json:"total_sleep_hour_interruptions"`
+	TotalOffHourInterruptions      int    `json:"total_off_hour_interruptions"`
+	TotalSnoozedSeconds            int    `json:"total_snoozed_seconds"`
+	TotalEngagedSeconds            int    `json:"total_engaged_seconds"`
+	TotalIncidentCount             int    `json:"total_incident_count"`
+	UpTimePct                      int    `json:"up_time_pct"`
+	UserDefinedEffortSeconds       int    `json:"user_defined_effort_seconds"`
+	RangeStart                     string `json:"range_start"`
+}
 
+type AnalyticsResponse struct {
+	Data            []AnalyticsData  `json:"data,omitempty"`
+	AnalyticsFilter *AnalyticsFilter `json:"filters,omitempty"`
+	AggregateUnit   string           `json:"aggregate_unit,omitempty"`
+	TimeZone        string           `json:"time_zone,omitempty"`
+}
+
+type AnalyticsFilter struct {
+	CreatedAtStart string   `json:"created_at_start,omitempty"`
+	CreatedAtEnd   string   `json:"created_at_end,omitempty"`
+	Urgency        string   `json:"urgency,omitempty"`
+	Major          bool     `json:"major,omitempty"`
+	ServiceIDs     []string `json:"service_ids,omitempty"`
+	TeamIDs        []string `json:"team_ids,omitempty"`
+	PriorityIDs    []string `json:"priority_ids,omitempty"`
+	PriorityName   []string `json:"priority_name,omitempty"`
+}
+
+type ServiceInfo struct {
+	Compliant   int
+	ServiceName string
+	ServiceTeam string
+}
+
+var authToken = os.Getenv("AUTH_TOKEN")
 var client = pagerduty.NewClient(authToken)
 
 func init() {
@@ -118,12 +165,6 @@ func NewMyCollector() *MyCollector {
 		teamsGaugeDesc:            prometheus.NewDesc("pagerduty_total_teams_metric", "Shows the total number of teams", nil, nil),
 		businessServicesGaugeDesc: prometheus.NewDesc("pagerduty_total_business_services_metric", "Shows the total number of business services", nil, nil),
 	}
-}
-
-type ServiceInfo struct {
-	Compliant   int
-	ServiceName string
-	ServiceTeam string
 }
 
 func pdServices() []pagerduty.Service {
@@ -316,48 +357,6 @@ func callPagerdutyApiBusinessServices() int {
 //		fmt.Println(Incidents[k].Service.ID)
 //	}
 //}
-
-type AnalyticsData struct {
-	ServiceID                      string `json:"service_id"`
-	ServiceName                    string `json:"service_name"`
-	TeamID                         string `json:"team_id"`
-	TeamName                       string `json:"team_name"`
-	MeanSecondsToResolve           int    `json:"mean_seconds_to_resolve"`
-	MeanSecondsToFirstAck          int    `json:"mean_seconds_to_first_ack"`
-	MeanSecondsToEngage            int    `json:"mean_seconds_to_engage"`
-	MeanSecondsToMobilize          int    `json:"mean_seconds_to_mobilize"`
-	MeanEngagedSeconds             int    `json:"mean_engaged_seconds"`
-	MeanEngagedUserCount           int    `json:"mean_engaged_user_count"`
-	TotalEscalationCount           int    `json:"total_escalation_count"`
-	MeanAssignmentCount            int    `json:"mean_assignment_count"`
-	TotalBusinessHourInterruptions int    `json:"total_business_hour_interruptions"`
-	TotalSleepHourInterruptions    int    `json:"total_sleep_hour_interruptions"`
-	TotalOffHourInterruptions      int    `json:"total_off_hour_interruptions"`
-	TotalSnoozedSeconds            int    `json:"total_snoozed_seconds"`
-	TotalEngagedSeconds            int    `json:"total_engaged_seconds"`
-	TotalIncidentCount             int    `json:"total_incident_count"`
-	UpTimePct                      int    `json:"up_time_pct"`
-	UserDefinedEffortSeconds       int    `json:"user_defined_effort_seconds"`
-	RangeStart                     string `json:"range_start"`
-}
-
-type AnalyticsResponse struct {
-	Data            []AnalyticsData  `json:"data,omitempty"`
-	AnalyticsFilter *AnalyticsFilter `json:"filters,omitempty"`
-	AggregateUnit   string           `json:"aggregate_unit,omitempty"`
-	TimeZone        string           `json:"time_zone,omitempty"`
-}
-
-type AnalyticsFilter struct {
-	CreatedAtStart string   `json:"created_at_start,omitempty"`
-	CreatedAtEnd   string   `json:"created_at_end,omitempty"`
-	Urgency        string   `json:"urgency,omitempty"`
-	Major          bool     `json:"major,omitempty"`
-	ServiceIDs     []string `json:"service_ids,omitempty"`
-	TeamIDs        []string `json:"team_ids,omitempty"`
-	PriorityIDs    []string `json:"priority_ids,omitempty"`
-	PriorityName   []string `json:"priority_name,omitempty"`
-}
 
 func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 	url := "https://api.pagerduty.com/analytics/metrics/incidents/services"
