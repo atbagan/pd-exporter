@@ -14,7 +14,6 @@ import (
 
 var authToken = os.Getenv("AUTH_TOKEN")
 
-//var authToken = "2zBBzbY8Qm5B-b8zLCbb"
 var client = pagerduty.NewClient(authToken)
 
 func init() {
