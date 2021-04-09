@@ -50,6 +50,7 @@ Wait for review of your MR
 
 Example `docker-compose.yml`:
 `web.telemetry-path` is an example of how to use the command arguments
+
 `PD_ANALYTICS_SETTINGS` example of how to use env vars
 ```yaml
 
