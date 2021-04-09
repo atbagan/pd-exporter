@@ -28,7 +28,7 @@ func main() {
 			Default("false").Envar("PD_ANALYTICS_SETTINGS").Bool()
 		pdServicesSettings = kingpin.Flag("pd.service_settings",
 			"Pagerduty Service Settings on/off.").
-			Default("false").Envar("PD_SERVICE_SETTINGS").Bool()
+			Default("false").Envar("PD_SERVICES_SETTINGS").Bool()
 		pdTeamsSettings = kingpin.Flag("pd.teams_settings",
 			"Pagerduty Teams Settings on/off.").
 			Default("false").Envar("PD_TEAMS_SETTINGS").Bool()
