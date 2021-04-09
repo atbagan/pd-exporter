@@ -22,7 +22,7 @@ In order to properly use this repository you will need to use a standard feature
 This can be explained further in the link at the bottom of this section. The general work flow is the following:
 
 clone the project
-$ git clone https://gitlab.com/moneng/reusable/prom-exporters/pagerduty.git
+$ git clone https://github.com/atbagan/pd-exporter.git
 
 create a branch to work on
 $ git checkout -b <your_branch_name>
@@ -53,9 +53,9 @@ Wait for review of your MR
 ## Getting Started 
 `$ docker build -t pd-exporter .`
 
-`$ docker run -e AUTH_TOKEN=your-api-key-here -dp 9798:9798 pd-exporter`
+`$ docker run -e AUTH_TOKEN=your-api-key-here -dp 9696:9696 pd-exporter`
 
-after a few seconds check: `http://localhost:9798/metrics`
+after a few seconds check: `http://localhost:9696/metrics`
 
 I am currently running this in `ECS`
 
