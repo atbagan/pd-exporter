@@ -25,16 +25,16 @@ func main() {
 			Default("/metrics").Envar("WEB_TELEMETRY_PATH").String()
 		pdAnalyticsSettings = kingpin.Flag("pd.analytics_settings",
 			"Pagerduty Analytics Settings on/off.").
-			Default("true").Envar("PD_ANALYTICS_SETTINGS").Bool()
+			Default("false").Envar("PD_ANALYTICS_SETTINGS").Bool()
 		pdServicesSettings = kingpin.Flag("pd.service_settings",
 			"Pagerduty Service Settings on/off.").
-			Default("true").Envar("PD_SERVICES_SETTINGS").Bool()
+			Default("false").Envar("PD_SERVICES_SETTINGS").Bool()
 		pdTeamsSettings = kingpin.Flag("pd.teams_settings",
 			"Pagerduty Teams Settings on/off.").
-			Default("true").Envar("PD_TEAMS_SETTINGS").Bool()
+			Default("false").Envar("PD_TEAMS_SETTINGS").Bool()
 		pdUsersSettings = kingpin.Flag("pd.users_settings",
 			"Pagerduty Users Settings on/off.").
-			Default("true").Envar("PD_USERS_SETTINGS").Bool()
+			Default("false").Envar("PD_USERS_SETTINGS").Bool()
 	)
 	kingpin.Version(version.Print(Name))
 	kingpin.CommandLine.HelpFlag.Short('h')
