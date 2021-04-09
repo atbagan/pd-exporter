@@ -5,7 +5,7 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
-COPY .. ./
+COPY . ./
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -o app
 
 FROM alpine:latest as certs
@@ -15,5 +15,5 @@ FROM scratch
 COPY --from=build /build/app /
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-EXPOSE 9696
+EXPOSE 9798
 ENTRYPOINT [ "/app" ]
