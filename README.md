@@ -33,9 +33,9 @@ $ git commit -am "committing my branch"
 push your branch to this repo 
 $ git push origin <your_branch_name>
 
-Create a merge request (MR) for your recently pushed branch
+Create a pull request (PR) for your recently pushed branch
 
-Wait for review of your MR
+Wait for review of your PR
 
 
 
@@ -67,6 +67,7 @@ pagerduty_exporter:
     - "127.0.0.1:9696:9696"
 ```
 Or, you can build and run it yourself like the following:
+
 `$ docker build -t pd-exporter .`
 
 `$ docker run -e AUTH_TOKEN=your-api-key-here -dp 9696:9696 pd-exporter`
