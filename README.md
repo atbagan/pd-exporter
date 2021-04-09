@@ -14,33 +14,20 @@
 ------------------------------------------------------------------------------------------------------------------------
 ## Contributing
 
+I welcome any contributions. Please fork the project on GitHub and open
+Pull Requests for any proposed changes.
+
+Please note that I will not merge any changes that encourage insecure
+behaviour. If in doubt please open an Issue first to discuss your proposal.
+
 ### Developer Workflow
 
 ```
-
 In order to properly use this repository you will need to use a standard feature branch workflow.
-This can be explained further in the link at the bottom of this section. The general work flow is the following:
-
-clone the project
-$ git clone https://github.com/atbagan/pd-exporter.git
-
-create a branch to work on
-$ git checkout -b <your_branch_name>
-
-write your code, make changes, etc..
-$ git commit -am "committing my branch"
-
-push your branch to this repo 
-$ git push origin <your_branch_name>
-
-Create a pull request (PR) for your recently pushed branch
-
-Wait for review of your PR
-
-
+This can be explained further in the link at the bottom of this section. 
 
 ```
-[`basic branch workflow`](https://docs.gitlab.com/ee/gitlab-basics/feature_branch_workflow.html)
+[`basic branch workflow`](https://gist.github.com/Chaser324/ce0505fbed06b947d962)
 
 ------------------------------------------------------------------------------------------------------------------------
 
