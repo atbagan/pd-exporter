@@ -21,7 +21,7 @@ type MyCollector struct {
 	complianceGaugeDesc       *prometheus.Desc
 }
 
-// new collector registered in main
+// NewServiceCollector is new collector registered in main
 func NewServiceCollector() *MyCollector {
 	return &MyCollector{
 		totalGaugeDesc:            prometheus.NewDesc("pagerduty_total_services_metric", "The number of total services in AIpagerduty", nil, nil),
@@ -30,14 +30,14 @@ func NewServiceCollector() *MyCollector {
 	}
 }
 
-// describe for services
+// Describe for services api
 func (c *MyCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalGaugeDesc
 	ch <- c.businessServicesGaugeDesc
 	ch <- c.complianceGaugeDesc
 }
 
-// services collector
+// Collect is services collector
 func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	var pagerdutyServices = pdServices()
 	total := totalServices(pagerdutyServices)

@@ -59,19 +59,19 @@ type AnalyticsFilter struct {
 	PriorityName   []string `json:"priority_name,omitempty"`
 }
 
-// new collector registered in main
+// NewAnalyticsCollector new collector registered in main
 func NewAnalyticsCollector() *AnalyticsCollector {
 	return &AnalyticsCollector{
 		totalAnalytics: prometheus.NewDesc("pagerduty_total_analytics_services_metric", "The number of total analytics in AIpagerduty", nil, nil),
 	}
 }
 
-// describe channel for analytics
+// Describe is channel for analytics
 func (c *AnalyticsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalAnalytics
 }
 
-// collector for the analytics api
+// Collect is collector for the analytics api
 func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 	var pagerdutyServices = pdServices()
 	serviceIds := getCompliantServiceIds(pagerdutyServices)

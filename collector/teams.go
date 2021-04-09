@@ -10,19 +10,19 @@ type TeamsCollector struct {
 	totalTeamsGaugeDesc *prometheus.Desc
 }
 
-// new teams collector registered in main
+// NewTeamsCollector is new teams collector registered in main
 func NewTeamsCollector() *TeamsCollector {
 	return &TeamsCollector{
 		totalTeamsGaugeDesc: prometheus.NewDesc("pagerduty_total_teams_metric", "The number of total teams in AIpagerduty", nil, nil),
 	}
 }
 
-// describe channel for teams
+// Describe is channel for teams
 func (c *TeamsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalTeamsGaugeDesc
 }
 
-// teams api collector
+// Collect is teams api collector
 func (c *TeamsCollector) Collect(ch chan<- prometheus.Metric) {
 
 	teams := getTotalTeams()

@@ -5,24 +5,24 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Users API collector
+// UsersCollector API collector
 type UsersCollector struct {
 	totalUsersGaugeDesc *prometheus.Desc
 }
 
-// New users collector registered in main
+// NewUsersCollector New users collector registered in main
 func NewUsersCollector() *UsersCollector {
 	return &UsersCollector{
 		totalUsersGaugeDesc: prometheus.NewDesc("pagerduty_total_users_metric", "The number of total users in AIpagerduty", nil, nil),
 	}
 }
 
-// describe for users api
+// Describe for users api
 func (c *UsersCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalUsersGaugeDesc
 }
 
-// users api collector
+// Collect is users api collector
 func (c *UsersCollector) Collect(ch chan<- prometheus.Metric) {
 	users := getTotalUsers()
 	ch <- prometheus.MustNewConstMetric(
