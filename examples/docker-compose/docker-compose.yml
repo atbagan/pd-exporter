@@ -1,0 +1,10 @@
+pagerduty_exporter:
+  image: agtbagan/pagerduty-exporter:0.1
+  command:
+    - '--web.telemetry-path=/example'
+  environment:
+    - AUTH_TOKEN=your_api_key
+    - PD_ANALYTICS_SETTINGS=false
+  restart: always
+  ports:
+    - "127.0.0.1:9696:9696"
