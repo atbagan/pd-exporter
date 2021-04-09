@@ -67,7 +67,7 @@ I am currently running this in `ECS`
 
 | Argument                | Environment Variable  |Introduced in Version | Description | Default     |
 | --------                | --------------------- | -----------          | ----------- | ----------- | 
-| web.listen-address      |  WEB_LISTEN_ADDERSS   |   0.1                |  Address to listen on for web server                   | 9696 |
+| web.listen-address      |  WEB_LISTEN_ADDRESS   |   0.1                |  Address to listen on for web server                   | 9696 |
 | web.telemetry-path      |  WEB_TELEMETRY_PATH   |   0.1                |  Path where to expose metrics                          | /metrics |
 | pd.analytics_settings   |  PD_ANALYTICS_SETTINGS|   0.1                |  Pagerduty Analytics Metrics Settings on/off (boolean) | true |
 | pd.services_settings    |  PD_SERVICES_SETTINGS |   0.1                |  Pagerduty Services Metrics Settings on/off (boolean)  | true |
