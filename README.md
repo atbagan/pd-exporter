@@ -47,7 +47,15 @@ Wait for review of your MR
 ## Maintenance
 
 ## Environment Variables
-`AUTH_TOKEN` : Pagerduty API Token
+| ENVIRONMENT VARIABLES   | Introduced in Version | Description | Default     |
+| --------                | --------------------- | ----------- | ----------- |
+| AUTH_TOKEN              | 0.1                   | Api Token   | None        |
+| WEB_LISTEN_ADDRESS      | 0.1                   |  Address to listen on for web server | 9696 |
+| WEB_TELEMETRY_PATH      | 0.1                   |  Path where to expose metrics        | /metrics |
+| PD_ANALYTICS_SETTINGS   | 0.1                   |  Pagerduty Analytics Metrics Settings on/off (boolean)| false |
+| PD_SERVICES_SETTINGS    | 0.1                   |  Pagerduty Services Metrics Settings on/off (boolean)| false |
+| PD_TEAMS_SETTINGS       | 0.1                   |  Pagerduty Teams Metrics Settings on/off (boolean)| false |
+| PD_USERS_SETTINGS       | 0.1                   |  Pagerduty Users Metrics Settings on/off (boolean)| false |
 
 ## Reasoning
 
@@ -67,9 +75,9 @@ I am currently working on the `service file` for non containerized deployments.
 
 | Argument                | Introduced in Version | Description | Default     |
 | --------                | --------------------- | ----------- | ----------- |
-| WEB_LISTEN_ADDRESS      | 0.1                   |  Address to listen on for web server | 9696 |
-| WEB_TELEMETRY_PATH      | 0.1                   |  Path where to expose metrics        | /metrics |
-| PD_ANALYTICS_SETTINGS   | 0.1                   |  Pagerduty Analytics Metrics Settings on/off (boolean)| false |
-| PD_SERVICES_SETTINGS    | 0.1                   |  Pagerduty Services Metrics Settings on/off (boolean)| false |
-| PD_TEAMS_SETTINGS       | 0.1                   |  Pagerduty Teams Metrics Settings on/off (boolean)| false |
-| PD_USERS_SETTINGS       | 0.1                   |  Pagerduty Users Metrics Settings on/off (boolean)| false |
+| web.listen-address      | 0.1                   |  Address to listen on for web server | 9696 |
+| web.telemetry-path      | 0.1                   |  Path where to expose metrics        | /metrics |
+| pd.analytics_settings   | 0.1                   |  Pagerduty Analytics Metrics Settings on/off (boolean)| false |
+| pd.services_settings    | 0.1                   |  Pagerduty Services Metrics Settings on/off (boolean)| false |
+| pd.teams_settings       | 0.1                   |  Pagerduty Teams Metrics Settings on/off (boolean)| false |
+| pd.users_settings       | 0.1                   |  Pagerduty Users Metrics Settings on/off (boolean)| false |
