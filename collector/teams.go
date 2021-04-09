@@ -5,20 +5,24 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// TeamsCollector is struct for teams desc
 type TeamsCollector struct {
 	totalTeamsGaugeDesc *prometheus.Desc
 }
 
+// new teams collector registered in main
 func NewTeamsCollector() *TeamsCollector {
 	return &TeamsCollector{
 		totalTeamsGaugeDesc: prometheus.NewDesc("pagerduty_total_teams_metric", "The number of total teams in AIpagerduty", nil, nil),
 	}
 }
 
+// describe channel for teams
 func (c *TeamsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalTeamsGaugeDesc
 }
 
+// teams api collector
 func (c *TeamsCollector) Collect(ch chan<- prometheus.Metric) {
 
 	teams := getTotalTeams()

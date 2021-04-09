@@ -7,18 +7,21 @@ import (
 	"regexp"
 )
 
+// ServiceInfo with compliancy, 0 or 1, name and team
 type ServiceInfo struct {
 	Compliant   int
 	ServiceName string
 	ServiceTeam string
 }
 
+// MyCollector services
 type MyCollector struct {
 	totalGaugeDesc            *prometheus.Desc
 	businessServicesGaugeDesc *prometheus.Desc
 	complianceGaugeDesc       *prometheus.Desc
 }
 
+// new collector registered in main
 func NewServiceCollector() *MyCollector {
 	return &MyCollector{
 		totalGaugeDesc:            prometheus.NewDesc("pagerduty_total_services_metric", "The number of total services in AIpagerduty", nil, nil),
@@ -27,17 +30,19 @@ func NewServiceCollector() *MyCollector {
 	}
 }
 
+// describe for services
 func (c *MyCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalGaugeDesc
 	ch <- c.businessServicesGaugeDesc
 	ch <- c.complianceGaugeDesc
 }
 
+// services collector
 func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	var pagerdutyServices = pdServices()
 	total := totalServices(pagerdutyServices)
 	compliance := compliantServices(pagerdutyServices)
-	//serviceIds := getCompliantServiceIds(pagerdutyServices)
+
 	serviceInfoSlice := serviceComplianceInfoWithNameAndTeam(pagerdutyServices)
 	businessServices := callPagerdutyApiBusinessServices()
 

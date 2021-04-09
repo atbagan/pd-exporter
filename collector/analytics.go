@@ -9,10 +9,12 @@ import (
 	"time"
 )
 
+// AnalyticsCollector is Analytics API Collector
 type AnalyticsCollector struct {
 	totalAnalytics *prometheus.Desc
 }
 
+// AnalyticsData is API Data structure
 type AnalyticsData struct {
 	ServiceID                      string `json:"service_id"`
 	ServiceName                    string `json:"service_name"`
@@ -37,6 +39,7 @@ type AnalyticsData struct {
 	RangeStart                     string `json:"range_start"`
 }
 
+// AnalyticsResponse is API Response
 type AnalyticsResponse struct {
 	Data            []AnalyticsData  `json:"data,omitempty"`
 	AnalyticsFilter *AnalyticsFilter `json:"filters,omitempty"`
@@ -44,6 +47,7 @@ type AnalyticsResponse struct {
 	TimeZone        string           `json:"time_zone,omitempty"`
 }
 
+// AnalyticsFilter is Analytics API Filter
 type AnalyticsFilter struct {
 	CreatedAtStart string   `json:"created_at_start,omitempty"`
 	CreatedAtEnd   string   `json:"created_at_end,omitempty"`
@@ -55,16 +59,19 @@ type AnalyticsFilter struct {
 	PriorityName   []string `json:"priority_name,omitempty"`
 }
 
+// new collector registered in main
 func NewAnalyticsCollector() *AnalyticsCollector {
 	return &AnalyticsCollector{
 		totalAnalytics: prometheus.NewDesc("pagerduty_total_analytics_services_metric", "The number of total analytics in AIpagerduty", nil, nil),
 	}
 }
 
+// describe channel for analytics
 func (c *AnalyticsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalAnalytics
 }
 
+// collector for the analytics api
 func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 	var pagerdutyServices = pdServices()
 	serviceIds := getCompliantServiceIds(pagerdutyServices)
