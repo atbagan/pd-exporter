@@ -74,3 +74,20 @@ I am currently running this in `ECS`
 | pd.teams_settings       |  PD_TEAMS_SETTINGS    |   0.1                |  Pagerduty Teams Metrics Settings on/off (boolean)     | true |
 | pd.users_settings       |  PD_USERS_SETTINGS    |   0.1                |  Pagerduty Users Metrics Settings on/off (boolean)     | true |
 | n/a                     |  AUTH_TOKEN           |   0.1                |  Pagerduty API Key  (required)                          | ""      |
+
+**NOTE** The list of metrics is currently small and will continue to grow over time as I make time to work on this.
+
+**NOTE** Metrics marked with an asterisk(*) are company specific and will likely hold no value unless we work for the same org.
+In the future those metrics will be flaggable and will be off by default.
+
+### Metrics
+| Name                | Type                  |Help |
+| --------            | --------------------- | ----------- |         
+| pagerduty_total_users_metric          | Gauge                 | Total number of pagerduty users in your account |
+| pagerduty_total_business_services_metric | Gauge             | Total number of business services in your account |
+| pagerduty_total_teams_metric            | Gauge              | Total number of teams in your account |
+| pagerduty_total_services_metric        | Gauge              | Total number of services in your account |
+| pagerduty_mtta_analytics_metric*                  | Gauge              | MTTA for services with compliant naming convention* |
+| pagerduty_mttr_analytics_metric*                 | Gauge              | MTTR for services with compliant naming convention* |
+| pagerduty_service_names_metric*  | Gauge              | Metric to check compliancy of service names. 0 for non 1 for compliant* |
+| pagerduty_total_services_compliant_metric* | Gauge | total services compliant with standard naming convention* |
