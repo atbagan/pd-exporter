@@ -16,27 +16,27 @@ type AnalyticsCollector struct {
 
 // AnalyticsData is API Data structure
 type AnalyticsData struct {
-	ServiceID                      string `json:"service_id"`
-	ServiceName                    string `json:"service_name"`
-	TeamID                         string `json:"team_id"`
-	TeamName                       string `json:"team_name"`
-	MeanSecondsToResolve           int    `json:"mean_seconds_to_resolve"`
-	MeanSecondsToFirstAck          int    `json:"mean_seconds_to_first_ack"`
-	MeanSecondsToEngage            int    `json:"mean_seconds_to_engage"`
-	MeanSecondsToMobilize          int    `json:"mean_seconds_to_mobilize"`
-	MeanEngagedSeconds             int    `json:"mean_engaged_seconds"`
-	MeanEngagedUserCount           int    `json:"mean_engaged_user_count"`
-	TotalEscalationCount           int    `json:"total_escalation_count"`
-	MeanAssignmentCount            int    `json:"mean_assignment_count"`
-	TotalBusinessHourInterruptions int    `json:"total_business_hour_interruptions"`
-	TotalSleepHourInterruptions    int    `json:"total_sleep_hour_interruptions"`
-	TotalOffHourInterruptions      int    `json:"total_off_hour_interruptions"`
-	TotalSnoozedSeconds            int    `json:"total_snoozed_seconds"`
-	TotalEngagedSeconds            int    `json:"total_engaged_seconds"`
-	TotalIncidentCount             int    `json:"total_incident_count"`
-	UpTimePct                      int    `json:"up_time_pct"`
-	UserDefinedEffortSeconds       int    `json:"user_defined_effort_seconds"`
-	RangeStart                     string `json:"range_start"`
+	ServiceID                      string  `json:"service_id"`
+	ServiceName                    string  `json:"service_name"`
+	TeamID                         string  `json:"team_id"`
+	TeamName                       string  `json:"team_name"`
+	MeanSecondsToResolve           float64 `json:"mean_seconds_to_resolve"`
+	MeanSecondsToFirstAck          float64 `json:"mean_seconds_to_first_ack"`
+	MeanSecondsToEngage            int     `json:"mean_seconds_to_engage"`
+	MeanSecondsToMobilize          int     `json:"mean_seconds_to_mobilize"`
+	MeanEngagedSeconds             int     `json:"mean_engaged_seconds"`
+	MeanEngagedUserCount           int     `json:"mean_engaged_user_count"`
+	TotalEscalationCount           int     `json:"total_escalation_count"`
+	MeanAssignmentCount            int     `json:"mean_assignment_count"`
+	TotalBusinessHourInterruptions int     `json:"total_business_hour_interruptions"`
+	TotalSleepHourInterruptions    int     `json:"total_sleep_hour_interruptions"`
+	TotalOffHourInterruptions      int     `json:"total_off_hour_interruptions"`
+	TotalSnoozedSeconds            int     `json:"total_snoozed_seconds"`
+	TotalEngagedSeconds            int     `json:"total_engaged_seconds"`
+	TotalIncidentCount             int     `json:"total_incident_count"`
+	UpTimePct                      float64 `json:"up_time_pct"`
+	UserDefinedEffortSeconds       int     `json:"user_defined_effort_seconds"`
+	RangeStart                     string  `json:"range_start"`
 }
 
 // AnalyticsResponse is API Response
@@ -82,7 +82,7 @@ func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 		metric, err := prometheus.NewConstMetric(
 			prometheus.NewDesc("pagerduty_mtta_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k}),
 			prometheus.GaugeValue,
-			float64(v[0]),
+			v[0],
 		)
 		if err != nil {
 			panic(err)
@@ -93,7 +93,18 @@ func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 		metric, err := prometheus.NewConstMetric(
 			prometheus.NewDesc("pagerduty_mttr_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"compliantServiceName": k}),
 			prometheus.GaugeValue,
-			float64(v[1]),
+			v[1],
+		)
+		if err != nil {
+			panic(err)
+		}
+		ch <- metric
+	}
+	for k, v := range mapOfMetrics {
+		metric, err := prometheus.NewConstMetric(
+			prometheus.NewDesc("pagerduty_uptime_percentage_analytics_metric", fmt.Sprintf("Uptime Percentage"), nil, prometheus.Labels{"compliantServiceName": k}),
+			prometheus.GaugeValue,
+			v[2],
 		)
 		if err != nil {
 			panic(err)
@@ -102,7 +113,7 @@ func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
+func callPagerDutyApiAnalytics(serviceIds []string) map[string][]float64 {
 	url := "https://api.pagerduty.com/analytics/metrics/incidents/services"
 	endTime := time.Now().Format(time.RFC3339)
 	startTime := time.Now().AddDate(-1, 0, 0).Format(time.RFC3339)
@@ -119,8 +130,8 @@ func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 	}
 
 	var analyticsResponse AnalyticsResponse
-	arrOfThings := make([]int, 0)
-	mapOfThings := make(map[string][]int, 0)
+	arrOfMttaMttrUptime := make([]float64, 0)
+	mapOfMetrics := make(map[string][]float64, 0)
 
 	for _, chunk := range chunks {
 
@@ -141,13 +152,13 @@ func callPagerDutyApiAnalytics(serviceIds []string) map[string][]int {
 		tmp := analyticsResponse
 
 		for _, v := range tmp.Data {
-			arrOfThings = nil
-			arrOfThings = append(arrOfThings, v.MeanSecondsToFirstAck, v.MeanSecondsToResolve)
-			mapOfThings[v.ServiceName] = arrOfThings
+			arrOfMttaMttrUptime = nil
+			arrOfMttaMttrUptime = append(arrOfMttaMttrUptime, v.MeanSecondsToFirstAck, v.MeanSecondsToResolve, v.UpTimePct)
+			mapOfMetrics[v.ServiceName] = arrOfMttaMttrUptime
 		}
 
 	}
-	return mapOfThings
+	return mapOfMetrics
 }
 
 func decodeJSON(resp *http.Response, payload interface{}) error {
