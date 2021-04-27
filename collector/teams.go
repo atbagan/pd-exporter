@@ -35,26 +35,26 @@ func (c *TeamsCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func getTotalTeams() int {
-	var opts pagerduty.ListUsersOptions
+	var opts pagerduty.ListTeamOptions
 	var APIList pagerduty.APIListObject
-	var Users []pagerduty.User
+	var Teams []pagerduty.Team
 
 	for {
-		eps, err := client.ListUsers(opts)
+		eps, err := client.ListTeams(opts)
 
 		if err != nil {
 			panic(err)
 		}
 
-		Users = append(Users, eps.Users...)
+		Teams = append(Teams, eps.Teams...)
 		APIList.Offset += 25
-		opts = pagerduty.ListUsersOptions{APIListObject: APIList}
+		opts = pagerduty.ListTeamOptions{APIListObject: APIList}
 
 		if eps.More != true {
 			break
 		}
 	}
-	totalUsers := len(Users)
+	totalTeams := len(Teams)
 
-	return totalUsers
+	return totalTeams
 }
