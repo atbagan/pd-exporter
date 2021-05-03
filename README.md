@@ -33,7 +33,7 @@ This can be explained further in the link at the bottom of this section.
 
 ## Getting Started 
 [Dockerhub](https://hub.docker.com/r/agtbagan/pagerduty-exporter)
-`docker pull agtbagan/pagerduty-exporter:0.1`
+`docker pull agtbagan/pagerduty-exporter:0.1.2`
 
 Example `docker-compose.yml`:
 
@@ -43,7 +43,7 @@ Example `docker-compose.yml`:
 ```yaml
 
 pagerduty_exporter:
-  image: agtbagan/pagerduty-exporter:0.1
+  image: agtbagan/pagerduty-exporter:0.1.2
   command:
     - '--web.telemetry-path=/example'
   environment:
