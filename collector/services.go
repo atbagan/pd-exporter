@@ -5,6 +5,7 @@ import (
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/prometheus/client_golang/prometheus"
 	"regexp"
+	"strings"
 )
 
 // ServiceInfo with compliancy, 0 or 1, name and team
@@ -63,8 +64,26 @@ func (c *MyCollector) Collect(ch chan<- prometheus.Metric) {
 	)
 	for _, v := range serviceInfoSlice {
 
+
+		var (
+			serviceLabel string
+			serviceID string
+		)
+
+		re := regexp.MustCompile("_SVC+")
+
+		if re.MatchString(v.ServiceName) {
+			 splitString := strings.Split(v.ServiceName, "_SVC")
+			 fmt.Printf("length: %s", splitString)
+			 serviceLabel = splitString[0]
+			 serviceID = fmt.Sprintf("SVC%s",splitString[1])
+		} else {
+			serviceLabel = v.ServiceName
+			serviceID = ""
+		}
+
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("pagerduty_service_names_metric", fmt.Sprintf("service names "), nil, prometheus.Labels{"allServiceNames": v.ServiceName, "allTeamNames": v.ServiceTeam}),
+			prometheus.NewDesc("pagerduty_service_names_metric", fmt.Sprintf("service names "), nil, prometheus.Labels{"allServiceNames": v.ServiceName, "allTeamNames": v.ServiceTeam, "allServiceLabels": serviceLabel, "allServiceIDs": serviceID}),
 			prometheus.GaugeValue,
 			float64(v.Compliant),
 		)

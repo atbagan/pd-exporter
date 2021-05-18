@@ -74,13 +74,29 @@ func (c *AnalyticsCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect is collector for the analytics api
 func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 	var pagerdutyServices = pdServices()
-	serviceIds := getCompliantServiceIds(pagerdutyServices)
+	serviceIds := getCompliantServiceIds(pagerdutyServices) // regex compiles _SVC+
 
 	mapOfMetrics := callPagerDutyApiAnalytics(serviceIds)
 
 	for k, v := range mapOfMetrics {
+
+		var (
+			serviceLabel string
+			serviceID string
+		)
+
+		splitString := strings.Split(k, "_SVC")
+		fmt.Printf("length: %s", len(splitString))
+		if len(splitString) > 1 {
+			serviceLabel = splitString[0]
+			serviceID = fmt.Sprintf("SVC%s",splitString[1])
+		} else {
+			 serviceLabel = k
+			 serviceID = ""
+		}
+
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("pagerduty_mtta_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k}),
+			prometheus.NewDesc("pagerduty_mtta_analytics_metric", fmt.Sprintf("Mean seconds to first ack "), nil, prometheus.Labels{"compliantServiceName": k, "compliantServiceLabel": serviceLabel, "compliantServiceID": serviceID}),
 			prometheus.GaugeValue,
 			v[0],
 		)
@@ -89,9 +105,26 @@ func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		ch <- metric
 	}
+
 	for k, v := range mapOfMetrics {
+
+		var (
+			serviceLabel string
+			serviceID string
+		)
+
+		splitString := strings.Split(k, "_SVC")
+		fmt.Printf("length: %s", len(splitString))
+		if len(splitString) > 1 {
+			serviceLabel = splitString[0]
+			serviceID = fmt.Sprintf("SVC%s",splitString[1])
+		} else {
+			 serviceLabel = k
+			 serviceID = ""
+		}
+
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("pagerduty_mttr_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"compliantServiceName": k}),
+			prometheus.NewDesc("pagerduty_mttr_analytics_metric", fmt.Sprintf("Mean seconds to resolve"), nil, prometheus.Labels{"compliantServiceName": k, "compliantServiceLabel": serviceLabel, "compliantServiceID": serviceID}),
 			prometheus.GaugeValue,
 			v[1],
 		)
@@ -100,9 +133,26 @@ func (c *AnalyticsCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		ch <- metric
 	}
+
 	for k, v := range mapOfMetrics {
+
+		var (
+			serviceLabel string
+			serviceID string
+		)
+
+		splitString := strings.Split(k, "_SVC")
+		fmt.Printf("length: %s", len(splitString))
+		if len(splitString) > 1 {
+			serviceLabel = splitString[0]
+			serviceID = fmt.Sprintf("SVC%s",splitString[1])
+		} else {
+			 serviceLabel = k
+			 serviceID = ""
+		}
+
 		metric, err := prometheus.NewConstMetric(
-			prometheus.NewDesc("pagerduty_uptime_percentage_analytics_metric", fmt.Sprintf("Uptime Percentage"), nil, prometheus.Labels{"compliantServiceName": k}),
+			prometheus.NewDesc("pagerduty_uptime_percentage_analytics_metric", fmt.Sprintf("Uptime Percentage"), nil, prometheus.Labels{"compliantServiceName": k, "compliantServiceLabel": serviceLabel, "compliantServiceID": serviceID}),
 			prometheus.GaugeValue,
 			v[2],
 		)
